@@ -14,7 +14,7 @@ module Scene.Camera
 
 import           Flow        ((<|))
 import           Graphics.GL (GLfloat)
-import           Linear      (M44, V3, (!*!), (*^))
+import           Linear      (M44, V3, normalize, (!*!), (*^))
 import           Scene.Math  (Angle (..), Application (..), apply, back3d,
                               eulerElevation, eulerHeading, mkRotationMatrix,
                               mkViewMatrix, negateAngle, up3d, x3d, y3d)
@@ -38,8 +38,8 @@ mkCamera :: V3 GLfloat -> V3 GLfloat -> V3 GLfloat -> Camera
 mkCamera position' viewDirection' moveDirection' =
     Camera
         { position = position'
-        , viewDirection = fromVector viewDirection'
-        , moveDirection = fromVector moveDirection'
+        , viewDirection = fromVector <| normalize viewDirection'
+        , moveDirection = fromVector <| normalize moveDirection'
         }
 
 -- | From the 'Camera', produce a view matrix.
