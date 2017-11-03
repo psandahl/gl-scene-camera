@@ -9,15 +9,13 @@ module Scene.Camera
     ( Camera
     , mkCamera
     , matrix
-    , fromEulerAngles -- TODO: remove from export.
     ) where
 
 import           Flow        ((<|))
 import           Graphics.GL (GLfloat)
-import           Linear      (M44, V3, normalize, (!*!), (*^))
-import           Scene.Math  (Angle (..), Application (..), apply, back3d,
-                              eulerElevation, eulerHeading, mkRotationMatrix,
-                              mkViewMatrix, negateAngle, up3d, x3d, y3d)
+import           Linear      (M44, V3, normalize, (*^))
+import           Scene.Math  (Angle (..), eulerElevation, eulerHeading,
+                              mkViewMatrix, up3d)
 
 -- | Camera record. Opaque to the user.
 data Camera = Camera
@@ -57,13 +55,6 @@ fromVector vec =
         , heading = eulerHeading vec
         , elevation = eulerElevation vec
         }
-
-fromEulerAngles :: Angle GLfloat -> Angle GLfloat -> V3 GLfloat
-fromEulerAngles heading' elevation' =
-    let pitch = mkRotationMatrix x3d <| negateAngle elevation'
-        yaw = mkRotationMatrix y3d heading'
-        mat = yaw !*! pitch
-    in apply mat <| Vector back3d
 
 viewspot :: V3 GLfloat -> Direction -> V3 GLfloat
 viewspot position' direction =
