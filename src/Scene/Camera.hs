@@ -11,8 +11,10 @@ module Scene.Camera
     , mkCamera
     , matrix
     , forward
+    , backward
     ) where
 
+import           Flow        ((<|))
 import           Graphics.GL (GLfloat)
 import           Linear      (M44, V3, (*^))
 import           Scene.Math  (Angle (..), fromEulerAngles, mkViewMatrix, up3d)
@@ -64,6 +66,17 @@ forward distance camera =
         { position = moveTo (position camera) (moveVector camera) distance
         }
 {-# INLINE forward #-}
+
+-- | Move the 'Camera' backward by the specified distance using the negated
+-- move direction for the camera.
+backward :: GLfloat -> Camera -> Camera
+backward distance camera =
+    camera
+        { position = moveTo (position camera)
+                            (negate <| moveVector camera)
+                            distance
+        }
+{-# INLINE backward #-}
 
 fromDirection :: Direction -> V3 GLfloat
 fromDirection direction =
