@@ -10,6 +10,7 @@ module Scene.Camera
     , Direction (..)
     , mkCamera
     , matrix
+    , forward
     ) where
 
 import           Graphics.GL (GLfloat)
@@ -51,17 +52,26 @@ mkCamera position' viewDirection' moveDirection' =
 matrix :: Camera -> M44 GLfloat
 matrix camera =
     mkViewMatrix (position camera)
-                 (viewspot (position camera) (viewVector camera))
+                 (moveTo (position camera) (viewVector camera) vista)
                  up3d
 {-# INLINE matrix #-}
+
+-- | Move the 'Camera' forward by the specified distance in the
+-- the camera's move direction.
+forward :: GLfloat -> Camera -> Camera
+forward distance camera =
+    camera
+        { position = moveTo (position camera) (moveVector camera) distance
+        }
+{-# INLINE forward #-}
 
 fromDirection :: Direction -> V3 GLfloat
 fromDirection direction =
     fromEulerAngles (heading direction) (elevation direction)
 
-viewspot :: V3 GLfloat -> V3 GLfloat -> V3 GLfloat
-viewspot position' direction =
-    position' + (vista *^ direction)
+moveTo :: V3 GLfloat -> V3 GLfloat -> GLfloat -> V3 GLfloat
+moveTo position' direction distance =
+    position' + (distance *^ direction)
 
 vista :: GLfloat
 vista = 10
