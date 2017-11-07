@@ -14,6 +14,7 @@ module Scene.Camera
     , forward
     , backward
     , turnLeft
+    , turnRight
     ) where
 
 import           Control.Lens (makeLenses, over, set, view, (%~), (.~), (^.))
@@ -21,7 +22,7 @@ import           Flow         ((<|))
 import           Graphics.GL  (GLfloat)
 import           Linear       (M44, V3, (*^))
 import           Scene.Math   (Angle (..), addAngles, fromEulerAngles,
-                               mkViewMatrix, up3d)
+                               mkViewMatrix, negateAngle, up3d)
 
 -- | Camera record. Opaque to the user.
 data Camera = Camera
@@ -86,7 +87,15 @@ backward distance camera =
 {-# INLINE backward #-}
 
 turnLeft :: Angle GLfloat -> Camera -> Camera
-turnLeft theta camera =
+turnLeft = turn
+{-# INLINE turnLeft #-}
+
+turnRight :: Angle GLfloat -> Camera -> Camera
+turnRight theta = turn (negateAngle theta)
+{-# INLINE turnRight #-}
+
+turn :: Angle GLfloat -> Camera -> Camera
+turn theta camera =
     let viewDirection' = over heading (addAngles theta) <| view viewDirection camera
         moveDirection' = over heading (addAngles theta) <| view moveDirection camera
     in set viewDirection viewDirection' <|
