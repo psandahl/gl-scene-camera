@@ -20,6 +20,7 @@ library
                      , flow
                      , gl
                      , gl-scene-math
+                     , lens
                      , linear
   default-language:    Haskell2010
   ghc-options:         -Wall
