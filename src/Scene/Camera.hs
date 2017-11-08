@@ -17,7 +17,7 @@ module Scene.Camera
     , turnRight
     ) where
 
-import           Control.Lens (makeLenses, over, set, view, (%~), (.~), (^.))
+import           Control.Lens (makeLenses, (%~), (.~), (^.))
 import           Flow         ((<|))
 import           Graphics.GL  (GLfloat)
 import           Linear       (M44, V3, (*^))
@@ -70,38 +70,36 @@ matrix camera =
 -- the camera's move direction.
 forward :: GLfloat -> Camera -> Camera
 forward distance camera =
-    set position
-        (moveTo (camera ^. position)
-                (camera ^. moveVector) distance)
-        camera
+    position .~
+        moveTo (camera ^. position) (camera ^. moveVector) distance <| camera
 {-# INLINE forward #-}
 
 -- | Move the 'Camera' backward by the specified distance using the negated
 -- move direction for the camera.
 backward :: GLfloat -> Camera -> Camera
 backward distance camera =
-    set position
-        (moveTo (camera ^. position)
-                (negate <| camera ^. moveVector) distance)
-        camera
+    position .~
+        moveTo (camera ^. position) (negate <| camera ^. moveVector) distance <| camera
 {-# INLINE backward #-}
 
+-- | Turn the 'Camera's view and move angles to the left.
 turnLeft :: Angle GLfloat -> Camera -> Camera
 turnLeft = turn
 {-# INLINE turnLeft #-}
 
+-- | Turn the 'Camera's view and move angles to the right.
 turnRight :: Angle GLfloat -> Camera -> Camera
 turnRight theta = turn (negateAngle theta)
 {-# INLINE turnRight #-}
 
 turn :: Angle GLfloat -> Camera -> Camera
 turn theta camera =
-    let viewDirection' = over heading (addAngles theta) <| view viewDirection camera
-        moveDirection' = over heading (addAngles theta) <| view moveDirection camera
-    in set viewDirection viewDirection' <|
-        set moveDirection moveDirection' <|
-        set viewVector (fromDirection viewDirection') <|
-        set moveVector (fromDirection moveDirection') camera
+    let viewDirection' = heading %~ addAngles theta <| camera ^. viewDirection
+        moveDirection' = heading %~ addAngles theta <| camera ^. moveDirection
+    in viewDirection .~ viewDirection' <|
+        moveDirection .~ moveDirection' <|
+        viewVector .~ fromDirection viewDirection' <|
+        moveVector .~ fromDirection moveDirection' <| camera
 
 fromDirection :: Direction -> V3 GLfloat
 fromDirection direction =
