@@ -15,13 +15,17 @@ module Scene.Camera
     , backward
     , turnLeft
     , turnRight
+    , viewLeft
+    , viewRight
+    , viewUp
+    , viewDown
     ) where
 
 import           Control.Lens (makeLenses, (%~), (.~), (^.))
 import           Flow         ((<|))
 import           Graphics.GL  (GLfloat)
 import           Linear       (M44, V3, (*^))
-import           Scene.Math   (Angle (..), addAngles, fromEulerAngles,
+import           Scene.Math   (Angle (..), addAngles, clamp, fromEulerAngles,
                                mkViewMatrix, negateAngle, up3d)
 
 -- | Camera record. Opaque to the user.
@@ -92,14 +96,47 @@ turnRight :: Angle GLfloat -> Camera -> Camera
 turnRight theta = turn (negateAngle theta)
 {-# INLINE turnRight #-}
 
+-- | Turn the 'Camera's view angles to the left.
+viewLeft :: Angle GLfloat -> Camera -> Camera
+viewLeft = changeViewHeading
+{-# INLINE viewLeft #-}
+
+-- | Turn the 'Camera's view angles to the right.
+viewRight :: Angle GLfloat -> Camera -> Camera
+viewRight theta = changeViewHeading (negateAngle theta)
+{-# INLINE viewRight #-}
+
+viewUp :: Angle GLfloat -> Camera -> Camera
+viewUp = changeViewElevation
+{-# INLINE viewUp #-}
+
+viewDown :: Angle GLfloat -> Camera -> Camera
+viewDown theta = changeViewElevation (negateAngle theta)
+{-# INLINE viewDown #-}
+
 turn :: Angle GLfloat -> Camera -> Camera
-turn theta camera =
-    let viewDirection' = heading %~ addAngles theta <| camera ^. viewDirection
-        moveDirection' = heading %~ addAngles theta <| camera ^. moveDirection
+turn theta = changeViewHeading theta . changeMoveHeading theta
+
+changeViewElevation :: Angle GLfloat -> Camera -> Camera
+changeViewElevation theta camera =
+    let viewDirection' = elevation %~ clampElevation . addAngles theta <| camera ^. viewDirection
     in viewDirection .~ viewDirection' <|
-        moveDirection .~ moveDirection' <|
         viewVector .~ fromDirection viewDirection' <|
-        moveVector .~ fromDirection moveDirection' <| camera
+        camera
+
+changeViewHeading :: Angle GLfloat -> Camera -> Camera
+changeViewHeading theta camera =
+    let viewDirection' = heading %~ addAngles theta <| camera ^. viewDirection
+    in viewDirection .~ viewDirection' <|
+        viewVector .~ fromDirection viewDirection' <|
+        camera
+
+changeMoveHeading :: Angle GLfloat -> Camera -> Camera
+changeMoveHeading theta camera =
+    let moveDirection' = heading %~ addAngles theta <| camera ^. moveDirection
+    in moveDirection .~ moveDirection' <|
+        moveVector .~ fromDirection moveDirection' <|
+        camera
 
 fromDirection :: Direction -> V3 GLfloat
 fromDirection direction =
@@ -111,3 +148,7 @@ moveTo position' direction distance =
 
 vista :: GLfloat
 vista = 10
+
+clampElevation :: Angle GLfloat -> Angle GLfloat
+clampElevation (Degrees theta) = Degrees <| clamp (-89) 89 theta
+clampElevation (Radians theta) = Radians <| clamp (-pi / 2 - 0.01) (pi / 2 - 0.01) theta
