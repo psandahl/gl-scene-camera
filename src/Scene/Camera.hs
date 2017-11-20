@@ -13,6 +13,8 @@ module Scene.Camera
     , matrix
     , forward
     , backward
+    , up
+    , down
     , turnLeft
     , turnRight
     , viewLeft
@@ -24,7 +26,7 @@ module Scene.Camera
 import           Control.Lens (makeLenses, (%~), (.~), (^.))
 import           Flow         ((<|))
 import           Graphics.GL  (GLfloat)
-import           Linear       (M44, V3, (*^))
+import           Linear       (M44, V3, (*^), _y)
 import           Scene.Math   (Angle (..), addAngles, clamp, fromEulerAngles,
                                mkViewMatrix, negateAngle, up3d)
 
@@ -85,6 +87,16 @@ backward distance camera =
     position .~
         moveTo (camera ^. position) (negate <| camera ^. moveVector) distance <| camera
 {-# INLINE backward #-}
+
+-- | Lift the camera's height position up with the specified amount.
+up :: GLfloat -> Camera -> Camera
+up distance = (position . _y) %~ (distance +)
+{-# INLINE up #-}
+
+-- | Lower the camera's height position down with the specified amount.
+down :: GLfloat -> Camera -> Camera
+down distance = up (negate distance)
+{-# INLINE down #-}
 
 -- | Turn the 'Camera's view and move angles to the left.
 turnLeft :: Angle GLfloat -> Camera -> Camera
