@@ -11,6 +11,7 @@ module Scene.Camera
     , Direction (..)
     , mkCamera
     , matrix
+    , position
     , forward
     , backward
     , up
