@@ -22,6 +22,7 @@ module Scene.Camera
     , viewRight
     , viewUp
     , viewDown
+    , flipViewElevation
     ) where
 
 import           Control.Lens (makeLenses, (%~), (.~), (^.))
@@ -126,6 +127,13 @@ viewUp = changeViewElevation
 viewDown :: Angle GLfloat -> Camera -> Camera
 viewDown theta = changeViewElevation (negateAngle theta)
 {-# INLINE viewDown #-}
+
+flipViewElevation :: Camera -> Camera
+flipViewElevation camera =
+    let viewDirection' = elevation %~ negateAngle <| camera ^. viewDirection
+    in viewDirection .~ viewDirection' <|
+        viewVector .~ fromDirection viewDirection' <| camera
+{-# INLINE flipViewElevation #-}
 
 turn :: Angle GLfloat -> Camera -> Camera
 turn theta = changeViewHeading theta . changeMoveHeading theta
